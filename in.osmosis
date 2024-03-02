@@ -1,0 +1,454 @@
+
+#read_restart temp.restart.4000000
+
+processors     2  *   *
+
+units       lj
+variable    T equal 0.85
+variable    V equal vol
+variable    dt equal 0.005
+
+variable    epsion1  equal 0.3    #######upwall调整上固体壁面与液体的亲疏水性
+
+variable    epsion2  equal 0.5    #######bottomwall调整上固体壁面与液体的亲疏水性
+
+variable    aa  loop  3 3
+
+variable    seed   index 12240 
+
+log  log.${aa}
+
+variable    run1  equal 100000
+variable    run2  equal 200000
+variable    run3  equal 100000
+variable    run4  equal 1000000
+
+variable    liquidnumber equal  60000
+
+variable    t  equal  0.1   ########温度的升高或降低
+
+
+########################################################################################
+
+########################################################################################
+
+dimension    3
+boundary     p p p
+
+lattice      fcc 1.587  ######密度为1 1.587
+
+
+########################################################################################
+
+########################################################################################
+
+########## definition of length variable
+
+
+
+variable     h  equal 11    ########## 10*1.587*0.34=5.4 nm
+
+variable     a  equal 4
+
+variable     b  equal 20
+
+variable     r  equal 2.5*$b+0.5*$b
+
+variable     z  equal 8    ##########z方向的长度
+
+variable     x  equal 2*$r
+
+variable     y  equal $a+3+0.5*$h
+
+
+
+########################################################################################
+
+########################################################################################
+
+######### definition region 
+
+
+
+region       box block -$x $x -$y $y -$z $z  
+
+
+######## varaivle v
+
+variable     v1 equal 0.5*$b
+
+variable     v2 equal 0.5*$h
+
+variable     v3 equal 0.5*$h+3
+
+variable     v4 equal 0.5*$b-3
+
+variable     v5 equal $r+1
+
+
+#########    for dynamic group
+
+
+region       leftbox block -$x -${v1} -$y $y -$z $z
+
+ 
+region       rightbox  block ${v1} $x -$y $y -$z $z
+
+region       midbox  block  -${v1} ${v1} -$y $y -$z $z
+
+
+########     for reservior and nanochannel
+
+region       leftreservior  block  -$r -${v1} -$y $y -$z $z
+
+region       rightreservior  block  ${v1} $r  -$y $y -$z $z
+
+region       nanochannel  block  -${v1} ${v1}  -${v2} ${v2} -$z $z 
+
+region       liquidregion union  3 leftreservior  rightreservior nanochannel   
+
+
+#########     for wall 
+
+region     upwall  block -${v1} ${v1} ${v2} ${v3} -$z $z
+
+region     bottomwall  block  -${v1} ${v1} -${v3} -${v2} -$z $z
+
+region     upleftwall block  -${v1} -${v4} ${v3} $y  -$z $z
+
+region     uprightwall block  ${v4} ${v1}  ${v3} $y  -$z $z 
+
+region     bottomleftwall block -${v1} -${v4} -$y -${v3} -$z $z 
+
+region     bottomrightwall block ${v4} ${v1} -$y -${v3} -$z $z 
+
+region     wall union 6 upwall bottomwall upleftwall uprightwall bottomleftwall bottomrightwall
+
+region     uwall union 3 upwall  upleftwall uprightwall
+
+region     bwall union 3 bottomwall bottomleftwall bottomrightwall
+
+
+#########     for piston 
+
+region    leftpiston  block  -${v5} -$r -$y $y -$z $z
+
+region    rightpiston  block  $r ${v5} -$y $y -$z $z
+
+
+#########    for nanochannel chunk calculation 
+
+region   NC  union 3 upwall bottomwall nanochannel
+
+
+#########   for wall boundary chunk calculation 
+
+
+variable    v6  equal  0.5*$b+10
+
+
+region  WBLU  block -${v6} -${v1} ${v2} $y -$z $z
+
+region  WBLB  block -${v6} -${v1} -$y -${v2} -$z $z
+
+region  WBRU  block  ${v1} ${v6} ${v2} $y -$z $z
+
+region  WBRB  block  ${v1} ${v6} -$y -${v2} -$z $z
+
+
+########################################################################################
+
+########################################################################################
+
+
+create_box   4 box
+
+
+mass         1 1
+mass         2 1
+mass         3 1
+mass         4 1
+
+
+########################################################################################
+
+########################################################################################
+
+
+create_atoms 1 random ${liquidnumber} ${seed} liquidregion  ######大气压0.1，密度为0.0632
+
+create_atoms 2 region uwall
+
+create_atoms 4 region bwall
+
+create_atoms 3 region leftpiston
+
+create_atoms 3 region rightpiston
+
+
+########################################################################################
+
+########################################################################################
+
+
+
+pair_style   lj/cut 4.5
+pair_coeff   1 1 1 1
+pair_coeff   2 2 1 1
+pair_coeff   3 3 1 1
+pair_coeff   4 4 1 1
+
+
+pair_coeff   1 2 ${epsion1} 1 
+pair_coeff   1 4 ${epsion2} 1 
+pair_coeff   1 3 0.1 1
+pair_coeff   2 3 1 1
+pair_coeff   2 4 1 1
+pair_coeff   3 4 1 1
+
+########################################################################################
+
+########################################################################################
+
+############  group definition
+
+group   wall region wall
+
+group   liquid  type 1
+
+
+group   leftpiston  region leftpiston
+
+group   rightpiston  region rightpiston
+
+
+timestep     ${dt}
+thermo       10000
+
+
+########################################################################################
+
+########################################################################################
+
+
+dump myDump all atom 100000 dump.TC.lammpstrj.${aa}
+
+fix      springself  wall spring/self  2500 xyz
+
+
+fix      springself1 leftpiston spring/self  2500 xyz
+
+fix      springself2 rightpiston spring/self  2500 xyz
+
+
+fix      pressure1 leftpiston aveforce  0.042 0 0      #######1个大气压为0.042
+
+fix      pressure2 rightpiston aveforce  -0.042 0 0
+
+
+
+
+minimize 1.0e-15 1.0e-15 1000 1000
+
+
+
+
+reset_timestep  0
+
+
+restart 500000 temp.restart.${aa}
+
+
+########################################################################################
+
+########################################################################################
+
+variable   damp   equal   100*${dt}
+
+velocity     liquid  create $T ${seed} mom yes rot yes dist gaussian 
+
+fix         NVT all nvt temp $T $T  ${damp}  
+
+
+compute  force1 liquid group/group leftpiston 
+
+compute  force2 liquid group/group rightpiston 
+
+variable xcm1 equal xcm(leftpiston,x)
+
+variable xcm2 equal xcm(rightpiston,x)
+
+
+
+
+fix force all  ave/time 10 1000 10000 c_force1[*] c_force2[*] v_xcm1 v_xcm2  file force.txt.${aa}
+
+
+############  count  number 
+
+
+
+run        ${run1}
+
+
+
+
+
+########################################################################################
+
+########################################################################################
+
+
+
+
+unfix      springself1 
+
+unfix      springself2 
+
+fix      springself3 leftpiston spring/self  2500 yz
+
+fix      springself4 rightpiston spring/self  2500 yz
+
+
+
+
+run       ${run2}
+
+
+
+
+
+########################################################################################
+
+########################################################################################
+
+unfix      NVT
+
+group      dynamicsLR  dynamic liquid region leftbox every 1 
+
+group      dynamicsRR  dynamic liquid region rightbox every 1 
+
+group      dynamicsMIDl  dynamic liquid region midbox every 1 
+
+group      dynamicsMIDs  dynamic wall region midbox every 1
+
+
+variable    Th equal $T+$t
+
+variable    Tl equal $T-$t
+
+
+fix         NVT1 dynamicsLR nvt temp ${Th} ${Th}  ${damp} 
+
+fix         NVT2 dynamicsRR nvt temp ${Tl} ${Tl}  ${damp} 
+
+#fix         NVT3l dynamicsMIDl nvt temp $T $T  ${damp} 
+
+#fix         NVT3s dynamicsMIDs nvt temp $T $T  ${damp} 
+
+fix         NVT3l dynamicsMIDl nve 
+
+fix         NVT3s dynamicsMIDs nve
+
+         
+fix         NVT4 leftpiston nvt temp ${Th} ${Th}  ${damp} 
+
+fix         NVT5 rightpiston nvt temp ${Tl} ${Tl}  ${damp} 
+
+
+run         ${run3}
+
+
+########################################################################################
+
+########################################################################################
+
+
+
+variable   run123  equal  ${run1}+${run2}+${run3}
+
+
+
+compute    stress   liquid  stress/atom  NULL 
+
+compute    ke       liquid  ke/atom
+
+compute    pe       liquid  pe/atom   
+
+
+#############  definition  of  chunk
+
+
+
+compute    chunkatomNCH   liquid  chunk/atom  bin/1d  y  lower  0.1 units lattice  region NC 
+
+#compute    chunkatomNCT   liquid  chunk/atom  bin/1d  x  lower  0.1 units lattice  region NC
+
+group   solid  type 2
+
+compute    chunkatomNCT_s   solid  chunk/atom  bin/1d  x  lower  0.1 units lattice  region NC
+ 
+
+compute    chunkatomboxH      liquid  chunk/atom  bin/1d  x  lower  0.1 units lattice   
+
+
+
+
+############# calculation  of  chunk
+ 
+
+fix  chunkatomNCH liquid  ave/chunk  10  1000 10000 chunkatomNCH  density/number temp vx vy vz fx fy fz c_stress[*] c_ke[*] c_pe[*] ave running file chunkatomNCH.txt.${aa} overwrite 
+
+
+#fix  chunkatomNCT liquid  ave/chunk  10  1000 10000 chunkatomNCT  density/number temp vx vy vz fx fy fz ave running file chunkatomNCT.txt.${aa} overwrite
+
+
+fix  chunkatomNCT_s solid  ave/chunk  10  1000 10000 chunkatomNCT_s  density/number temp vx vy vz fx fy fz ave running file chunkatomNCTs.txt.${aa} overwrite
+
+
+fix  chunkatomboxH liquid  ave/chunk  10  1000 10000 chunkatomboxH  density/number temp vx vy vz fx fy fz c_stress[*] c_ke[*] c_pe[*] ave running file chunkatomboxH.txt.${aa} overwrite 
+
+
+  
+
+
+
+############# count number
+
+compute     leftboxchunk  liquid  chunk/atom  bin/1d x lower $x region leftbox
+
+compute     rightboxchunk  liquid  chunk/atom  bin/1d x lower $x region rightbox
+
+fix     leftboxchunk  liquid  ave/chunk   10 100 1000 leftboxchunk density/number temp  ave one file leftboxchunk.txt.${aa}  
+
+fix     rightboxchunk  liquid  ave/chunk   10 100 1000 rightboxchunk density/number temp  ave one file rightboxchunk.txt.${aa}  
+ 
+
+
+
+###########   velocity distribution cloud picture
+
+
+region    VDregion   block -$b $b -$y $y -$z $z units lattice 
+
+
+compute   VD1  liquid  chunk/atom  bin/2d  x lower 0.5 y lower 0.5 units lattice region VDregion
+
+fix  VD1 liquid  ave/chunk  10  1000 10000 VD1  density/number temp vx vy vz fx fy fz c_stress[*] c_ke[*] c_pe[*] ave running file VD1.txt.${aa} overwrite
+
+compute   VD2  liquid  chunk/atom  bin/2d  x lower 1 y lower 1 units lattice region VDregion
+
+fix  VD2 liquid  ave/chunk  10  1000 10000 VD2  density/number temp vx vy vz fx fy fz c_stress[*] c_ke[*] c_pe[*] ave running file VD2.txt.${aa} overwrite
+
+
+
+run   ${run4} 
+
+clear
+
+next seed 
+
+next aa
+
+jump  in.osmosis
+
