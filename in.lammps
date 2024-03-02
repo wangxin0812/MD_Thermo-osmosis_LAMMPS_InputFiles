@@ -9,9 +9,9 @@ variable    epsion1  equal 0.3
 
 variable    epsion2  equal 0.5   
 
-variable    aa  loop  3 3
+variable    aa  loop  8
 
-variable    seed   index 12240 
+variable    seed   index 1024 2024 3024 4024 5024 10240 20240 30240 40240  
 
 log  log.${aa}
 
