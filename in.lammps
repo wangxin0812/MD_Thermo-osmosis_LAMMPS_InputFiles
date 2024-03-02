@@ -5,9 +5,9 @@ variable    T equal 0.85
 variable    V equal vol
 variable    dt equal 0.005
 
-variable    epsion1  equal 0.3    #######upwall调整上固体壁面与液体的亲疏水性
+variable    epsion1  equal 0.3    
 
-variable    epsion2  equal 0.5    #######bottomwall调整上固体壁面与液体的亲疏水性
+variable    epsion2  equal 0.5   
 
 variable    aa  loop  3 3
 
@@ -22,7 +22,7 @@ variable    run4  equal 1000000
 
 variable    liquidnumber equal  60000
 
-variable    t  equal  0.1   ########温度的升高或降低
+variable    t  equal  0.1   
 
 
 ########################################################################################
@@ -32,7 +32,7 @@ variable    t  equal  0.1   ########温度的升高或降低
 dimension    3
 boundary     p p p
 
-lattice      fcc 1.587  ######密度为1 1.587
+lattice      fcc 1.587  
 
 
 ########################################################################################
@@ -43,7 +43,7 @@ lattice      fcc 1.587  ######密度为1 1.587
 
 
 
-variable     h  equal 11    ########## 10*1.587*0.34=5.4 nm
+variable     h  equal 11    
 
 variable     a  equal 4
 
@@ -51,7 +51,7 @@ variable     b  equal 20
 
 variable     r  equal 2.5*$b+0.5*$b
 
-variable     z  equal 8    ##########z方向的长度
+variable     z  equal 8    
 
 variable     x  equal 2*$r
 
@@ -172,7 +172,7 @@ mass         4 1
 ########################################################################################
 
 
-create_atoms 1 random ${liquidnumber} ${seed} liquidregion  ######大气压0.1，密度为0.0632
+create_atoms 1 random ${liquidnumber} ${seed} liquidregion  
 
 create_atoms 2 region uwall
 
@@ -238,7 +238,7 @@ fix      springself1 leftpiston spring/self  2500 xyz
 fix      springself2 rightpiston spring/self  2500 xyz
 
 
-fix      pressure1 leftpiston aveforce  0.042 0 0      #######1个大气压为0.042
+fix      pressure1 leftpiston aveforce  0.042 0 0      
 
 fix      pressure2 rightpiston aveforce  -0.042 0 0
 
