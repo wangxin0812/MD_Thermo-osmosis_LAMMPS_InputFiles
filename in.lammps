@@ -1,6 +1,3 @@
-
-#read_restart temp.restart.4000000
-
 processors     2  *   *
 
 units       lj
@@ -8,9 +5,9 @@ variable    T equal 0.85
 variable    V equal vol
 variable    dt equal 0.005
 
-variable    epsion1  equal 0.3    #######upwallµ÷ÕûÉÏ¹ÌÌå±ÚÃæÓëÒºÌåµÄÇ×ÊèË®ĞÔ
+variable    epsion1  equal 0.3    #######upwallè°ƒæ•´ä¸Šå›ºä½“å£é¢ä¸æ¶²ä½“çš„äº²ç–æ°´æ€§
 
-variable    epsion2  equal 0.5    #######bottomwallµ÷ÕûÉÏ¹ÌÌå±ÚÃæÓëÒºÌåµÄÇ×ÊèË®ĞÔ
+variable    epsion2  equal 0.5    #######bottomwallè°ƒæ•´ä¸Šå›ºä½“å£é¢ä¸æ¶²ä½“çš„äº²ç–æ°´æ€§
 
 variable    aa  loop  3 3
 
@@ -25,7 +22,7 @@ variable    run4  equal 1000000
 
 variable    liquidnumber equal  60000
 
-variable    t  equal  0.1   ########ÎÂ¶ÈµÄÉı¸ß»ò½µµÍ
+variable    t  equal  0.1   ########æ¸©åº¦çš„å‡é«˜æˆ–é™ä½
 
 
 ########################################################################################
@@ -35,7 +32,7 @@ variable    t  equal  0.1   ########ÎÂ¶ÈµÄÉı¸ß»ò½µµÍ
 dimension    3
 boundary     p p p
 
-lattice      fcc 1.587  ######ÃÜ¶ÈÎª1 1.587
+lattice      fcc 1.587  ######å¯†åº¦ä¸º1 1.587
 
 
 ########################################################################################
@@ -54,7 +51,7 @@ variable     b  equal 20
 
 variable     r  equal 2.5*$b+0.5*$b
 
-variable     z  equal 8    ##########z·½ÏòµÄ³¤¶È
+variable     z  equal 8    ##########zæ–¹å‘çš„é•¿åº¦
 
 variable     x  equal 2*$r
 
@@ -175,7 +172,7 @@ mass         4 1
 ########################################################################################
 
 
-create_atoms 1 random ${liquidnumber} ${seed} liquidregion  ######´óÆøÑ¹0.1£¬ÃÜ¶ÈÎª0.0632
+create_atoms 1 random ${liquidnumber} ${seed} liquidregion  ######å¤§æ°”å‹0.1ï¼Œå¯†åº¦ä¸º0.0632
 
 create_atoms 2 region uwall
 
@@ -241,7 +238,7 @@ fix      springself1 leftpiston spring/self  2500 xyz
 fix      springself2 rightpiston spring/self  2500 xyz
 
 
-fix      pressure1 leftpiston aveforce  0.042 0 0      #######1¸ö´óÆøÑ¹Îª0.042
+fix      pressure1 leftpiston aveforce  0.042 0 0      #######1ä¸ªå¤§æ°”å‹ä¸º0.042
 
 fix      pressure2 rightpiston aveforce  -0.042 0 0
 
